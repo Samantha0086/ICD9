@@ -67,11 +67,6 @@ criterion_cnn = nn.CrossEntropyLoss(weight=class_weights,reduction='mean')
 #--------------------------------------------------------------------
 dataset = word2vec_dataset('Value', X, train_index, test_index)
 
-
-with open('dataset.pkl', 'wb') as outp:
-    
-    pickle.dump(dataset, outp, pickle.HIGHEST_PROTOCOL)
-
 X_train = X_train.drop(columns = ["Value"])
 X_test = X_test.drop(columns = ["Value"])
 
