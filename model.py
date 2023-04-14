@@ -31,19 +31,17 @@ class Word2Vec_neg_sampling(nn.Module):
         self.embeddings_input.weight.data.uniform_(-1,1)
         self.embeddings_context.weight.data.uniform_(-1,1)
         
-        self.vocab_size, self.embed_dim = self.embeddings_input.weight.data.shape
-        self.embedding = nn.Embedding.from_pretrained(self.embeddings_input.weight.data,
-                                                          freeze=freeze_embedding)
+     
         
          # Conv Network
         self.conv1d_list = nn.ModuleList([
-            nn.Conv1d(in_channels=self.embed_dim,
+            nn.Conv1d(in_channels=embedding_size,
                       out_channels=num_filters[i],
                       kernel_size=filter_sizes[i])
             for i in range(len(filter_sizes))
         ])
         # Fully-connected layer and Dropout
-        self.fc1 = nn.Linear(np.sum(num_filters)+9, 64)
+        self.fc1 = nn.Linear(np.sum(num_filters)+11, 64)
         self.fc2 = nn.Linear(64, 32)
         self.fc3 = nn.Linear(32, 64)
         self.fc4 = nn.Linear(64, 8)
@@ -106,7 +104,7 @@ class Word2Vec_neg_sampling(nn.Module):
         
             
         # Get embeddings from `input_ids`. Output shape: (b, max_len, embed_dim)
-        x_embed = self.embedding(input_ids).float()
+        x_embed = self.embeddings_input(input_ids).float()
         
 
         # Permute `x_embed` to match input shape requirement of `nn.Conv1d`.
