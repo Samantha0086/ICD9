@@ -11,13 +11,11 @@ import numpy as np
 class Word2Vec_neg_sampling(nn.Module):
 
     def __init__(self, embedding_size, vocab_size, device, noise_dist = None, negative_samples = 10,
-                 embeddings=None,
                  freeze_embedding=False,
-                 embed_dim=50,
                  filter_sizes=[3, 4, 5],
-                 num_filters=[100, 100, 100],
+                 num_filters=[20, 20, 20],
                  num_classes=2,
-                 dropout=0.5):
+                 dropout=0.3):
         super(Word2Vec_neg_sampling, self).__init__()
 
         self.embeddings_input = nn.Embedding(vocab_size, embedding_size)
@@ -127,11 +125,12 @@ class Word2Vec_neg_sampling(nn.Module):
         x = self.fc3(x)
         x = self.fc4(x)
         x = self.fc5(x)
-        logits = self.fc6(x)
+        
+        logits = self.dropout(self.fc6(x))
         
 
         return total_loss, logits
            
 
 
-      
+    
