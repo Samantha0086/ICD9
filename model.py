@@ -39,7 +39,7 @@ class Word2Vec_neg_sampling(nn.Module):
             for i in range(len(filter_sizes))
         ])
         # Fully-connected layer and Dropout
-        self.fc1 = nn.Linear(np.sum(num_filters)+11, 64)
+        self.fc1 = nn.Linear(np.sum(num_filters)+9, 64)
         self.fc2 = nn.Linear(64, 32)
         self.fc3 = nn.Linear(32, 64)
         self.fc4 = nn.Linear(64, 8)
@@ -109,6 +109,7 @@ class Word2Vec_neg_sampling(nn.Module):
         # Output shape: (b, embed_dim, max_len)
         x_reshaped = x_embed.permute(0, 2, 1)
 
+
         # Apply CNN and ReLU. Output shape: (b, num_filters[i], L_out)
         x_conv_list = [F.relu(conv1d(x_reshaped)) for conv1d in self.conv1d_list]
 
@@ -127,6 +128,7 @@ class Word2Vec_neg_sampling(nn.Module):
         x = self.fc5(x)
         
         logits = self.dropout(self.fc6(x))
+  
         
 
         return total_loss, logits

@@ -10,6 +10,7 @@ def evaluate(model, val_dataloader, test_loader_sg):
     val_accuracy = []
     val_loss = []
     val_auroc = []
+    val_auprc = []
 
     # For each batch in our validation set...
     for item1, item2 in zip(test_loader_sg, val_dataloader):
@@ -33,19 +34,20 @@ def evaluate(model, val_dataloader, test_loader_sg):
         accuracy = (preds == y).cpu().numpy().mean() * 100
         
         auroc =  roc_auc_score(y, proba)
+        auprc = average_precision_score(y, proba)
         
 
         val_auroc.append(auroc)
-        
-      
+        val_auprc.append(auprc)
         val_accuracy.append(accuracy)
 
     # Compute the average accuracy and loss over the validation set.
     val_loss = np.mean(val_loss)
     val_accuracy = np.mean(val_accuracy)
     
+    
 
-    return val_loss, val_accuracy, val_auroc
+    return val_loss, val_accuracy, val_auroc, val_auprc
 
 
 
