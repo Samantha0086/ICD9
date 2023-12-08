@@ -1,0 +1,12 @@
+negative_samples: 20
+lr: 0.001
+batch_size1: 256
+batch_size2: 32
+num_epochs: 30
+weight_cnn: 0.8
+embedding_dim: 100
+device: 'cpu'
+outcome: "MORTALITY_30_DAY"
+predictor: "PROCEDURE_AND_DIAGNOSIS_ICD"
+# outcome = ["MORTALITY_30_DAY", "MORTALITY_1_YEAR", "READMISSION_30_DAY", "READMISSION_1_YEAR"][1]
+# predictor =["PROCEDURE_ICD", "DIAGNOSIS_ICD", "PROCEDURE_AND_DIAGNOSIS_ICD"][2]

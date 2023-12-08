@@ -1,13 +1,65 @@
 import numpy as np
-
+import yaml
 import torch
 import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import (TensorDataset, DataLoader, RandomSampler, SequentialSampler)
 import pandas as pd
 from sklearn.metrics import roc_auc_score, average_precision_score
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 
+def load_and_split(outcome, predictor):
+    X = pd.read_csv("admit_modified.csv")[[outcome,'LOS', 'AGE', 'GENDER_M', "ETHNICITY_Asian", 
+     "ETHNICITY_Black", "ETHNICITY_Hispanic", "ETHNICITY_Native_Hawaiian", "ETHNICITY_Other", 
+     "ETHNICITY_White", predictor]]
+    X = X.dropna()
+    X = X.reset_index().drop(columns = ["index"])
+    y = X[outcome].values
+    X = X.drop(columns = outcome)    
+    X[predictor] = X[predictor].apply(lambda x: x.replace("'", "")[1:-1].split(", "))
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.22, random_state = 1, stratify = y) 
+    train_index = X_train.index
+    test_index = X_test.index
+    return X, X_train, X_test, y_train, y_test, train_index, test_index
+
+
+
+def load_hyperparameters(config_file):
+    with open(config_file, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+def print_result(loss, accuracy, auroc, auprc, mode):
+
+
+    print(f"{mode} loss", loss, '\n')
+    print(f"{mode} accuracy", accuracy, '\n')
+    print(f"{mode} auroc", np.mean(auroc)*100, '\n')
+    print(f"{mode} auprc", np.mean(auprc)*100, '\n')
+
+
+def plot_and_save_roc_curve(y_true, y_proba, epoch, file_path):
+    fpr, tpr, _ = roc_curve(y_true, y_proba)
+    roc_auc = auc(fpr, tpr)
+
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'Validation ROC - Epoch {epoch+1}')
+    plt.legend(loc="lower right")
+    # Save the figure
+    plt.savefig(file_path)
+    plt.close()  # Close the figure to avoid displaying it in the notebook
 
 def evaluate(model, val_dataloader, test_loader_sg,word2vec,criterion_cnn, weight_cnn):
     """After the completion of each training epoch, measure the model's
@@ -22,12 +74,15 @@ def evaluate(model, val_dataloader, test_loader_sg,word2vec,criterion_cnn, weigh
     val_loss = []
     val_auroc = []
     val_auprc = []
+    val_proba = []
+    val_true = []
 
     # For each batch in our validation set...
     for item1, item2 in zip(test_loader_sg, val_dataloader):
         x_batch = item1[:,0]
         y_batch = item1[:,1]
         X, X1,y = item2
+        val_true.extend(y.numpy())
 
         # Compute logits
         with torch.no_grad():
@@ -40,6 +95,7 @@ def evaluate(model, val_dataloader, test_loader_sg,word2vec,criterion_cnn, weigh
         # Get the predictions
         preds = torch.argmax(logits, dim=1).flatten()
         proba = logits[:, 1].detach().numpy()
+        val_proba.extend(proba)
 
         # Calculate the accuracy rate
         accuracy = (preds == y).cpu().numpy().mean() * 100
@@ -60,7 +116,7 @@ def evaluate(model, val_dataloader, test_loader_sg,word2vec,criterion_cnn, weigh
    
     
 
-    return val_loss, val_accuracy, val_auroc, val_auprc
+    return val_loss, val_accuracy, val_auroc, val_auprc, val_true, val_proba
 
 
 
